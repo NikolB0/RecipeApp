@@ -2,25 +2,14 @@
   <div class="row">
     <div class="col-8">
       <!-- nova forma za post -->
-
-      <form @submit.prevent="postNewImage" class="form-inline mb-5">
-        <div class="form-group">
-          <label for="imageUrl">Image URL</label>
-          <input
-            v-model="newImageUrl"
-            type="text"
-            class="form-control ml-2"
-            placeholder="Enter the image URL"
-            id="imageUrl"
-          />
-        </div>
-        <!-- <form @submit.prevent="postNewRecipe" class="mb-5">
+      <img v-if="loading" class="loading" :src="require('@/assets/loading.gif')" />
+        <form v-if="!loading" @submit.prevent="postNewRecipe" class="mb-5">
         <croppa
           :width="400"
           :height="250"
           placeholder="Upload photo"
           v-model="imageReference"
-        ></croppa> -->
+        ></croppa>
 
         <div class="form-group">
           <label for="imageTitle">Title</label>
@@ -41,126 +30,114 @@
             class="form-control ml-2"
             placeholder="Enter the description"
             id="imageDescription"
-          />
+          />          
         </div>
-        <button type="submit" class="btn btn-primary ml-2">Post image</button>
+
+        <button type="submit" class="btn btn-primary ml-2">Publish</button>
       </form>
       <card v-for="card in filteredCards" :key="card.id" :info="card" />
     </div>
-    <div class="col-4">Sidebar</div>
+    <!-- <div class="col-4">Sidebar</div> -->
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
-import Card from "@/components/Card.vue";
-import Recipe from "@/components/Recipe.vue";
-import Recomended from "@/components/Recomended.vue";
-import store from "@/store";
-import { db } from "@/firebase";
-
-let cards = [];
-
-//API/firebase/neki drugi udaljeni server, tj. baza -> sve kartice -> cards
-
-cards = [
-  {
-    url: "https://unsplash.com/photos/KRGFXJWIo2Y",
-    email: "mario.marich@gmail.com",
-    title: "Salad",
-    description: "Delicious Salad...",
-    time: "5 minutes ago...",
-  },
-];
-
-
+import Card from '@/components/Card.vue';
+import store from '@/store';
+import { db, storage } from '@/firebase';
+//... API/Firebase -> sve kartice -> cards
+// cards = [
+//     { url: 'https://picsum.photos/id/1/400/400', description: 'laptop', time: 'few minutes ago...' },
+//     { url: 'https://picsum.photos/id/2/400/400', description: 'laptop #2', time: 'hour ago...' },
+//     { url: 'https://picsum.photos/id/3/400/400', description: 'laptop #3', time: 'few hours ago...' },
+// ];
 export default {
-  name: "Home",
-  data: function () {
-    return {
-      cards,
-      store,
-      users,
-      newImageUrl: "", // <-- url nove slike
-      newImageTitle: "",
-      newImageDescription: "", // <-- opis nove slike
-      imageReference: null,
-    };
-  },
-
-  mounted() {
-    this.getPosts();
-  },
-
-  methods: {
-    postNewRecipe() {
-      // this.imageReference.generateBlob(data => {
-      //   console.log(data); // ovo daje bajtove u konzolu...
-
-      //   let imageName = Date.now() + ".png" ;
-      // });
-
-      const imageDescription = this.newImageDescription;
-      const imageTitle = this.newImageTitle;
-
-      db.collection("posts")
-        .add({
-          url: this.newImageUrl,
-          email: store.currentUser, //u sotru smo spremili podatak o trenutnom useru
-          posted_at: Date.now(),
-          desc: imageDescription,
-          title: imageTitle,
-        })
-        .then(() => {
-          console.log("Successfully saved", doc);
-        })
-        .catch(() => {
-          console.error(e);
-        });
+    name: 'home',
+    data: function() {
+        return {
+            loading: false,
+            cards: [],
+            store,
+            newImageTitle:'',
+            newImageDescription: '',
+            newImageUrl: '',
+            imageReference: null,
+        };
     },
-
-    getPosts() {
-      let cards = [];
-      //... API/Firebase -> sve kartice -> cards
-      console.log("Loading posts");
-
-      db.collection("posts").orderBy("posted_at", "desc").limit(10).get();
-
-      then((results) => {
-        results.forEach((doc) => {
-          let id = doc.id;
-          let data = doc.data();
-          let card = {
-            id: doc.id,
-            url: data.url,
-            time: data.posted_at,
-            title: data.imageTitle,
-            desc: data.imageDescription,
-          };
-          this.cards.push(card);
-        });
-      });
+    mounted() {
+        this.getPosts();
+        //
+        //
     },
-  },
-  computed: {
-    filterCards() {
-      //logika koja filtrira cards
-      let termin = this.store.searchTerm;
-
-      return this.cards.filter(
-        (card) =>
-          card.description.includes(termin) ||
-          card.title.includes(termin) ||
-          card.username.includes(termin)
-      );
+    methods: {
+        getPosts() {
+            console.log('firebase dohvat...');
+            db.collection('posts')
+                .orderBy('posted_at', 'desc')
+                .limit(10)
+                .get()
+                .then((query) => {
+                    this.cards = [];
+                    query.forEach((doc) => {
+                        const data = doc.data();
+                        console.log(data);
+                        this.cards.push({
+                            id: doc.id,
+                            time: data.posted_at,
+                            description: data.desc,
+                            title: data.title,
+                            url: data.url,
+                        });
+                    });
+                });
+        },
+        getImage() {
+            // Promise based, omotač oko callbacka
+            return new Promise((resolveFn, errorFn) => {
+                this.imageReference.generateBlob((data) => {
+                    resolveFn(data);
+                });
+            });
+        },
+        async postNewRecipe() {
+            try {
+                this.loading = true;
+                let blobData = await this.getImage();
+                let imageName = 'posts/' + store.currentUser + '/' + Date.now() + '.png';
+                let result = await storage.ref(imageName).put(blobData);
+                let url = await result.ref.getDownloadURL(); // Promise
+                // čuva
+                console.log('Link', url);
+                const imageTitle = this.newImageTitle;
+                const imageDescription = this.newImageDescription;
+                let doc = await db.collection('posts').add({
+                    url: url,
+                    desc: imageDescription,
+                    title: imageTitle,
+                    email: store.currentUser,
+                    posted_at: Date.now(),
+                });
+                console.log('Saved', doc);
+                this.getPosts();
+            } catch (e) {
+                console.error('Error', e);
+            }
+            this.loading = false;
+        },
     },
-  },
-  components: {
-    Card, // isto kao Card: Card
-    Recipe,
-    Recomended,
-  },
+    computed: {
+      filteredCards() {
+            // logika koja filtrira cards
+            let termin = this.store.searchTerm;
+            return this.cards.filter((card) => card.description.includes(termin));
+        },
+    },
+    components: {
+        Card,
+    },
 };
+
 </script>
 
 <style scoped>
