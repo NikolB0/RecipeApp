@@ -1,6 +1,6 @@
 <template>
     <div class="signup pt-3">
-      <h1>This is a signup page</h1>
+      <h1 style="font-family: 'Lucida Bright'; margin-top: 10rem; margin-bottom: 1rem;">Signup</h1>
       <div class="container">
         <div class="row">
           <div class="col-sm"></div>
@@ -72,10 +72,10 @@
             .auth()
             .createUserWithEmailAndPassword(this.email, this.password)
             .then(function() {
-              console.log("Uspješna registracija");
+              console.log("Successful registration");
             })
             .catch(function(error) {
-              console.error("Došlo je do pogreške", error);
+              console.error("Error: ", error);
             });
           console.log("Nastavak");
         } else {
@@ -85,4 +85,16 @@
     },
   };
   </script>
-  
+
+<style scoped>
+    .btn {
+      text-align: right;
+      background-color: rgb(159, 159, 159);
+      border-color: grey;
+    }
+    
+    .btn:hover {  
+      background-color:#dd6824 !important;
+      border-color: grey !important;
+    }
+    </style>

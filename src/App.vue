@@ -2,12 +2,12 @@
   <div id="app">
     <nav
       id="nav"
-      class="navbar navbar-expand-lg py-0 navbar-light bg-white fixed-top"
+      class="navbar navbar-expand-lg py-0 navbar-light fixed-top"
     >
       <router-link to="/" class="navbar-brand">
         <img
           src="@/assets/logo.png"
-          height="40"
+          height="60"
           class="d-inline-block align-top"
           alt=""
           loading="lazy"
@@ -108,13 +108,15 @@ export default {
 
 #nav {
   padding: 30px;
+  background-color: #f7d2bd;
+  height: 80px;
 
   a {
     font-weight: bold;
     color: #2c3e50;
 
     &.router-link-exact-active {
-      color: #42b983;
+      color: #dd6824;
     }
   }
 }
@@ -123,4 +125,10 @@ export default {
   display: block;
   text-align: center;
 }
+
+.container mt-5 {
+  display: flex;
+  align-content: center;
+}
+
 </style>

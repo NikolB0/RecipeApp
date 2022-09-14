@@ -1,6 +1,7 @@
 <template>
+  <div class="background">
   <div class="login pt-3">
-    <h1>This is a login page</h1>
+    <h1 style="font-family: 'Lucida Bright'; margin-top: 10rem; margin-bottom: 1rem;">Login</h1>
     <div class="container">
       <div class="row">
         <div class="col-sm"></div>
@@ -25,7 +26,7 @@
                 placeholder="Password"
               />
             </div>
-            <button type="button" @click="login()" class="btn btn-primary">
+            <button type="button" @click="login()" class="btn btn-primary" style="margin:8px;">
               Submit
             </button>
             <!-- YOU DON'T HAVE AN ACCOUNT? SIGN UP -->
@@ -38,6 +39,7 @@
         <div class="col-sm"></div>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -69,3 +71,16 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.btn {
+  text-align: right;
+  background-color: rgb(159, 159, 159);
+  border-color: grey;
+}
+
+.btn:hover {  
+  background-color:#dd6824 !important;
+  border-color: grey !important;
+}
+</style>
